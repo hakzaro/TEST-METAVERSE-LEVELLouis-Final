@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Retour vers le Futur - TP A-Frame</title>
+
+    <!-- A-Frame & composants -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-event-set-component@5.0.1/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/wmurphyrd/aframe-super-hands-component@4.0.5/dist/aframe-super-hands.min.js"></script>
+
+    <!-- Composants personnalisés -->
+    <script>
+      AFRAME.registerComponent('toggle-texture', {
+        init: function () {
+          this.texture1 = '#texture1';
+          this.texture2 = '#texture2';
+          this.current = 1;
+          this.el.addEventListener('click', () => {
+            this.current = this.current === 1 ? 2 : 1;
+            const newTexture = this.current === 1 ? this.texture1 : this.texture2;
+            this.el.setAttribute('material', 'src', newTexture);
+          });
+        }
+      });
+
+      AFRAME.registerComponent('move-on-click', {
+        init: function () {
+          this.moved = false;
+          this.el.addEventListener('click', () => {
+            const newPosition = this.moved ? '-6.5 1.25 0.5' : '-5 1.25 0.5';
+            this.el.setAttribute('position', newPosition);
+            this.moved = !this.moved;
+          });
+        }
+      });
+
+      AFRAME.registerComponent('play-sound-on-click', {
+        init: function () {
+          this.el.addEventListener('click', () => {
+            const sound = document.querySelector('#son-retour');
+            sound.components.sound.playSound();
+          });
+        }
+      });
+
+      AFRAME.registerComponent('toggle-video', {
+        init: function () {
+          this.video = document.querySelector('#video');
+          this.isPlaying = false;
+          this.video.play().then(() => {
+            this.video.pause();
+            this.video.currentTime = 0;
+          }).catch(() => {});
+          this.el.addEventListener('click', () => {
+            if (this.isPlaying) {
+              this.video.pause();
+            } else {
+              this.video.play();
+            }
+            this.isPlaying = !this.isPlaying;
+          });
+        }
+      });
+
+      AFRAME.registerComponent('toggle-sound', {
+        init: function () {
+          this.sound = document.querySelector('#son3-entity');
+          this.isPlaying = false;
+          this.el.addEventListener('click', () => {
+            if (this.isPlaying) {
+              this.sound.components.sound.stopSound();
+            } else {
+              this.sound.components.sound.playSound();
+            }
+            this.isPlaying = !this.isPlaying;
+          });
+        }
+      });
+
+      AFRAME.registerComponent('toggle-scale', {
+        init: function () {
+          this.originalScale = null;
+          this.enlarged = false;
+          this.el.addEventListener('click', () => {
+            if (!this.originalScale) {
+              this.originalScale = Object.assign({}, this.el.getAttribute('scale'));
+            }
+            this.el.setAttribute('scale', this.enlarged ? this.originalScale : {
+              x: this.originalScale.x * 2,
+              y: this.originalScale.y * 2,
+              z: this.originalScale.z * 2
+            });
+            this.enlarged = !this.enlarged;
+          });
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene cursor="rayOrigin: mouse" raycaster="objects: .clickable">
+
+      <!-- Assets -->
+      <a-assets>
+        <img id="texture-sol" src="assets/texture/sol.jpg">
+        <img id="affiche1" src="assets/texture/affiche1.jpg">
+        <img id="affiche2" src="assets/texture/affiche2.jpg">
+        <img id="sky360" src="assets/texture/bttf360.jpg">
+        <img id="texture1" src="assets/texture/texture1.jpg">
+        <img id="texture2" src="assets/texture/texture2.jpg">
+        <audio id="son" src="assets/sounds/son.mp3"></audio>
+        <audio id="son3" src="assets/sounds/son3.mp3"></audio>
+        <video id="video" src="assets/videos/son2.mp4" crossorigin="anonymous" webkit-playsinline playsinline></video>
+        <a-asset-item id="voiture" src="assets/models/voiture.glb"></a-asset-item>
+        <a-asset-item id="hoverboard" src="assets/models/hoverboard.glb"></a-asset-item>
+        <a-asset-item id="perso1" src="assets/models/personnage1.glb"></a-asset-item>
+        <a-asset-item id="perso2" src="assets/models/personnage2.glb"></a-asset-item>
+        <a-asset-item id="telecommande-obj" src="assets/models/remote/remote.obj"></a-asset-item>
+        <a-asset-item id="telecommande-mtl" src="assets/models/remote/remote.mtl"></a-asset-item>
+      </a-assets>
+
+      <!-- Ciel & Sol -->
+      <a-sky src="#sky360" rotation="0 -130 0"></a-sky>
+      <a-plane src="#texture-sol" rotation="-90 0 0" width="200" height="200" repeat="10 10"></a-plane>
+
+      <!-- Affiches -->
+      <a-plane position="0 2 -8" width="6" height="4" color="#222"></a-plane>
+      <a-plane src="#affiche1" position="-1.5 2 -7.9" width="1.5" height="2"></a-plane>
+      <a-plane src="#affiche2" position="1.5 2 -7.9" width="1.5" height="2"></a-plane>
+
+      <!-- Interactions -->
+      <a-plane position="-8 2 0" rotation="0 90 0" width="8" height="5" color="#222"></a-plane>
+      <a-text value="Cube : change de texture" position="-8 4 -2" rotation="0 90 0" width="6" align="center" color="#FFF"></a-text>
+      <a-text value="Sphère : déplacement au clic" position="-8 4 2" rotation="0 90 0" width="6" align="center" color="#FFF"></a-text>
+
+      <a-box position="-6.5 1 -1.5" width="1" height="1" depth="1" src="#texture1" class="clickable" toggle-texture></a-box>
+      <a-sphere position="-6.5 1.25 2.5" radius="0.7" color="#FF00FF" class="clickable" move-on-click></a-sphere>
+
+      <!-- Vidéo -->
+      <a-plane position="8 2 0" rotation="0 -90 0" width="6" height="4" color="#222"></a-plane>
+      <a-text value="Vidéo : jouer / arrêter" position="8 3.5 0" rotation="0 -90 0" width="6" align="center" color="#FFF"></a-text>
+      <a-video id="video-player" src="#video" position="7.9 2 0" rotation="0 -90 0" width="4" height="2.25" autoplay="false" loop="false"></a-video>
+
+      <!-- Télécommande -->
+      <a-entity obj-model="obj: #telecommande-obj" material="src: assets/models/remote/remote.jpg"
+                position="6 0.1 0"
+                rotation="-90 270 0"
+                scale="0.3 0.3 0.3"
+                class="clickable"
+                toggle-video>
+      </a-entity>
+
+      <!-- Buzzer & son3 -->
+      <a-cylinder position="0 0.5 0" height="0.2" radius="0.5" color="red" class="clickable" toggle-sound></a-cylinder>
+      <a-entity id="son3-entity" sound="src: #son3" position="0 0 0"></a-entity>
+
+      <!-- Mur texte voiture -->
+      <a-plane position="0 4 12.5" rotation="0 180 0" width="6" height="3" color="#111"></a-plane>
+      <a-text value="Cliquez sur la voiture pour la démarrer" position="0 4 12.5" rotation="0 180 0" width="8" align="center" color="#FFF"></a-text>
+
+      <!-- Cône interactif -->
+      <a-cone position="-3 0.75 0" radius-bottom="0.5" height="1.5" scale="1 1 1" color="#00FFFF" class="clickable" toggle-scale></a-cone>
+
+      <!-- Voiture & son -->
+      <a-entity id="son-retour" sound="src: #son; autoplay: false" position="15 -3.3 8"></a-entity>
+      <a-entity gltf-model="#voiture" position="15 -3.3 8" scale="4 4 4" rotation="0 90 0" class="clickable" play-sound-on-click></a-entity>
+
+      <!-- Hoverboard -->
+      <a-entity gltf-model="#hoverboard" position="10 1 5" scale="2 2 2" rotation="0 90 0"></a-entity>
+
+      <!-- Personnages -->
+      <a-entity gltf-model="#perso1" position="-2 0 -5.5" scale="1 1 1"></a-entity>
+      <a-entity gltf-model="#perso2" position="3 0 -5.5" scale="1 1 1"></a-entity>
+
+      <!-- Caméra -->
+      <a-entity camera look-controls wasd-controls super-hands position="0 1.6 0"></a-entity>
+
+    </a-scene>
+  </body>
+</html>
